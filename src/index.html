@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Корпоративный чат</title>
+</head>
+<body>
+  <div id="reg-modal" class="modal active">
+    <h2>Введите никнейм</h2>
+    <input id="nickname" type="text" placeholder="Никнейм" />
+    <button id="reg-btn">Войти в чат</button>
+    <p id="reg-error" class="error"></p>
+  </div>
+
+  <div id="chat-container" class="hidden">
+    <aside class="users-list">
+      <h3>Пользователи</h3>
+      <ul id="users-ul"></ul>
+    </aside>
+    <main class="chat-area">
+      <div id="messages"></div>
+      <form id="message-form">
+        <input id="message-input" type="text" placeholder="Сообщение" />
+        <button type="submit">Отправить</button>
+      </form>
+    </main>
+  </div>
+</body>
+</html>
