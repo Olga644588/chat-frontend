@@ -2,14 +2,12 @@ import { WebSocketClient } from './websocket-client.js';
 
 export class ChatApp {
   constructor() {
-    this.httpUrl = 'https://ВАШ-BACKEND.up.railway.app';
-    this.wsUrl = 'wss://ВАШ-BACKEND.up.railway.app';
+    this.httpUrl = 'https://chat-backend-production-e6e8.up.railway.app';
+    this.wsUrl  = 'wss://chat-backend-production-e6e8.up.railway.app'; // обязательно wss!
 
     this.myUser = null;
     this.wsClient = null;
 
-    this.myUser = { id: 'test-user', name: 'TestUser' };
-    this.showChat();
     this.initHandlers();
   }
 
@@ -34,6 +32,7 @@ export class ChatApp {
         body: JSON.stringify({ name: nickname }),
       });
       const data = await res.json();
+
       if (res.ok && data.status === 'ok') {
         this.myUser = data.user;
         this.showChat();
@@ -45,7 +44,7 @@ export class ChatApp {
     } catch (err) {
       console.error(err);
       const errorEl = document.getElementById('reg-error');
-      if (errorEl) errorEl.textContent = 'Ошибка регистрации (бэкенд не запущен)';
+      if (errorEl) errorEl.textContent = 'Ошибка регистрации';
     }
   }
 
@@ -58,7 +57,7 @@ export class ChatApp {
         else if (data.type === 'send') this.renderMessage(data);
       });
     } catch (e) {
-      console.warn('[ChatApp] WebSocket не подключился (ожидаемо без бэкенда)');
+      console.warn('[ChatApp] WebSocket не подключился', e);
     }
   }
 
@@ -95,11 +94,7 @@ export class ChatApp {
     const form = document.getElementById('message-form');
     const input = document.getElementById('message-input');
 
-    this.renderUsers([
-      { id: 1, name: 'Алиса' },
-      { id: 2, name: 'Борис' },
-      { id: 3, name: 'Cветлана' }
-    ]);
+    this.renderUsers([]);
 
     if (form && input) {
       form.addEventListener('submit', (e) => {
