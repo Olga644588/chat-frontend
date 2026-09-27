@@ -3,7 +3,7 @@ import { WebSocketClient } from './websocket-client.js';
 export class ChatApp {
   constructor() {
     this.httpUrl = 'https://chat-backend-production-e6e8.up.railway.app';
-    this.wsUrl  = 'wss://chat-backend-production-e6e8.up.railway.app'; // обязательно wss!
+    this.wsUrl  = 'wss://chat-backend-production-e6e8.up.railway.app';
 
     this.myUser = null;
     this.wsClient = null;
@@ -20,8 +20,11 @@ export class ChatApp {
   }
 
   async register() {
+    console.log('[ChatApp] Попытка регистрации...');
+
     const nicknameEl = document.getElementById('nickname');
     if (!nicknameEl) return;
+
     const nickname = nicknameEl.value.trim();
     if (!nickname) return;
 
@@ -31,7 +34,9 @@ export class ChatApp {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: nickname }),
       });
+
       const data = await res.json();
+      console.log('[ChatApp] Ответ сервера:', data);
 
       if (res.ok && data.status === 'ok') {
         this.myUser = data.user;
@@ -39,12 +44,12 @@ export class ChatApp {
         await this.connectWs();
       } else {
         const errorEl = document.getElementById('reg-error');
-        if (errorEl) errorEl.textContent = data.message || 'Никнейм занят';
+        if (errorEl) errorEl.textContent = data.message || 'Никнейм занят. Выберите другой.';
       }
     } catch (err) {
       console.error(err);
       const errorEl = document.getElementById('reg-error');
-      if (errorEl) errorEl.textContent = 'Ошибка регистрации';
+      if (errorEl) errorEl.textContent = 'Ошибка соединения с сервером.';
     }
   }
 
@@ -72,7 +77,6 @@ export class ChatApp {
     if (!messagesDiv) return;
 
     const div = document.createElement('div');
-
     const isMine = data.user?.id === this.myUser.id;
 
     div.className = `message ${isMine ? 'message--mine' : 'message--other'}`;
@@ -91,6 +95,24 @@ export class ChatApp {
   }
 
   initHandlers() {
+    const regBtn = document.getElementById('reg-btn');
+    if (regBtn) {
+      regBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.register();
+      });
+    }
+
+    const nicknameEl = document.getElementById('nickname');
+    if (nicknameEl) {
+      nicknameEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.register();
+        }
+      });
+    }
+
     const form = document.getElementById('message-form');
     const input = document.getElementById('message-input');
 
