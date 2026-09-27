@@ -1,7 +1,7 @@
 {
   "name": "chat-frontend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Чат-приложение на чистом JavaScript с WebSocket.",
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.prod.js",
@@ -10,14 +10,21 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
+  "devDependencies": {
     "css-loader": "^7.1.5",
+    "html-webpack-plugin": "^5.6.8",
     "style-loader": "^4.0.0",
     "webpack": "^5.111.1",
     "webpack-cli": "^7.2.3",
     "webpack-dev-server": "^6.0.0"
   },
-  "devDependencies": {
-    "html-webpack-plugin": "^5.6.8"
-  }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Olga644588/chat-frontend.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Olga644588/chat-frontend/issues"
+  },
+  "homepage": "https://github.com/Olga644588/chat-frontend#readme"
 }
