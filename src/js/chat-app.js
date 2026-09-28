@@ -3,7 +3,7 @@ import { WebSocketClient } from './websocket-client.js';
 export class ChatApp {
   constructor() {
     this.httpUrl = 'https://chat-backend-production-e6e8.up.railway.app';
-    this.wsUrl  = 'wss://chat-backend-production-e6e8.up.railway.app';
+    this.wsUrl = 'wss://chat-backend-production-e6e8.up.railway.app';
 
     this.myUser = null;
     this.wsClient = null;
@@ -20,8 +20,6 @@ export class ChatApp {
   }
 
   async register() {
-    console.log('[ChatApp] Попытка регистрации...');
-
     const nicknameEl = document.getElementById('nickname');
     if (!nicknameEl) return;
 
@@ -36,7 +34,6 @@ export class ChatApp {
       });
 
       const data = await res.json();
-      console.log('[ChatApp] Ответ сервера:', data);
 
       if (res.ok && data.status === 'ok') {
         this.myUser = data.user;
@@ -54,22 +51,47 @@ export class ChatApp {
   }
 
   async connectWs() {
-    try {
-      this.wsClient = new WebSocketClient(this.wsUrl);
-      await this.wsClient.connect();
-      this.wsClient.onMessage((data) => {
-        if (Array.isArray(data)) this.renderUsers(data);
-        else if (data.type === 'send') this.renderMessage(data);
-      });
-    } catch (e) {
-      console.warn('[ChatApp] WebSocket не подключился', e);
+    this.wsClient = new WebSocketClient(this.wsUrl);
+    this.wsClient.onOpen = () => {
+      this.showConnectionStatus('Подключено', 'connected');
+    };
+    this.wsClient.onClose = () => {
+      this.showConnectionStatus('Соединение потеряно. Переподключение...', 'disconnected');
+    };
+    this.wsClient.onReconnect = () => {
+      this.showConnectionStatus('Переподключено', 'connected');
+    };
+    await this.wsClient.connect();
+    this.wsClient.onMessage((data) => {
+      if (Array.isArray(data)) this.renderUsers(data);
+      else if (data.type === 'send') this.renderMessage(data);
+    });
+  }
+
+  showConnectionStatus(text, className) {
+    let statusEl = document.getElementById('connection-status');
+    if (!statusEl) {
+      statusEl = document.createElement('div');
+      statusEl.id = 'connection-status';
+      const chatContainer = document.getElementById('chat-container');
+      if (chatContainer) chatContainer.insertAdjacentElement('afterbegin', statusEl);
     }
+    statusEl.textContent = text;
+    statusEl.className = `connection-status ${className}`;
   }
 
   renderUsers(users) {
     const ul = document.getElementById('users-ul');
     if (!ul) return;
-    ul.innerHTML = users.map(u => `<li>${u.name}</li>`).join('');
+
+    const fragment = document.createDocumentFragment();
+    users.forEach((u) => {
+      const li = document.createElement('li');
+      li.textContent = u.name; // textContent — защита от XSS
+      fragment.appendChild(li);
+    });
+
+    ul.replaceChildren(fragment);
   }
 
   renderMessage(data) {
@@ -87,10 +109,10 @@ export class ChatApp {
     const span = document.createElement('span');
     span.textContent = ': ' + data.message;
 
-    div.insertAdjacentElement('beforeend', strong);
-    div.insertAdjacentElement('beforeend', span);
+    div.appendChild(strong);
+    div.appendChild(span);
 
-    messagesDiv.insertAdjacentElement('beforeend', div);
+    messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
@@ -123,12 +145,6 @@ export class ChatApp {
         e.preventDefault();
         const text = input.value.trim();
         if (!text || !this.myUser) return;
-
-        this.renderMessage({
-          type: 'send',
-          message: text,
-          user: this.myUser,
-        });
 
         if (this.wsClient) {
           this.wsClient.send({
