@@ -7,6 +7,7 @@ export class ChatApp {
 
     this.myUser = null;
     this.wsClient = null;
+    this.userListInterval = null;
 
     this.initHandlers();
   }
@@ -52,20 +53,55 @@ export class ChatApp {
 
   async connectWs() {
     this.wsClient = new WebSocketClient(this.wsUrl);
+
     this.wsClient.onOpen = () => {
       this.showConnectionStatus('Подключено', 'connected');
+      this.startUserListPolling();
     };
+
     this.wsClient.onClose = () => {
       this.showConnectionStatus('Соединение потеряно. Переподключение...', 'disconnected');
+      this.stopUserListPolling();
     };
+
     this.wsClient.onReconnect = () => {
       this.showConnectionStatus('Переподключено', 'connected');
+      this.startUserListPolling();
     };
+
     await this.wsClient.connect();
+
     this.wsClient.onMessage((data) => {
-      if (Array.isArray(data)) this.renderUsers(data);
-      else if (data.type === 'send') this.renderMessage(data);
+      if (Array.isArray(data)) {
+        this.renderUsers(data);
+      } else if (data.type === 'send') {
+        this.renderMessage(data);
+      } else if (data.type === 'user_joined' || data.type === 'user_left') {
+        this.requestUserList();
+      }
     });
+  }
+
+  startUserListPolling() {
+    this.stopUserListPolling();
+    this.userListInterval = setInterval(() => this.requestUserList(), 10000);
+  }
+
+  stopUserListPolling() {
+    if (this.userListInterval) {
+      clearInterval(this.userListInterval);
+      this.userListInterval = null;
+    }
+  }
+
+  requestUserList() {
+    if (
+      this.wsClient &&
+      this.wsClient.ws &&
+      this.wsClient.ws.readyState === WebSocket.OPEN
+    ) {
+      this.wsClient.send({ type: 'get_users' });
+    }
   }
 
   showConnectionStatus(text, className) {
@@ -85,9 +121,10 @@ export class ChatApp {
     if (!ul) return;
 
     const fragment = document.createDocumentFragment();
+
     users.forEach((u) => {
       const li = document.createElement('li');
-      li.textContent = u.name; // textContent — защита от XSS
+      li.textContent = u.name;
       fragment.appendChild(li);
     });
 
@@ -155,6 +192,13 @@ export class ChatApp {
         }
 
         input.value = '';
+      });
+    }
+
+    const refreshBtn = document.getElementById('refresh-users-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        this.requestUserList();
       });
     }
   }
