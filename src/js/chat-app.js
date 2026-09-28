@@ -124,7 +124,7 @@ export class ChatApp {
 
     users.forEach((u) => {
       const li = document.createElement('li');
-      li.textContent = u.name;
+      li.textContent = u.name; // Защита от XSS
       fragment.appendChild(li);
     });
 
@@ -195,11 +195,5 @@ export class ChatApp {
       });
     }
 
-    const refreshBtn = document.getElementById('refresh-users-btn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => {
-        this.requestUserList();
-      });
-    }
   }
 }
